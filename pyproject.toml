@@ -1,0 +1,13 @@
+[project]
+name = "mcp-src-tree"
+version = "0.1.0"
+description = "MCP server for generating source tree"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp",
+    "pathspec",
+]
+
+[tool.rye]
+managed = true
+dev-dependencies = []
