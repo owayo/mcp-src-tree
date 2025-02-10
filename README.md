@@ -4,6 +4,8 @@
 `.`で始まるディレクトリや`.gitignore` に記載された条件に従って、特定のファイルやディレクトリを除外します。
 Claudeに組み込むことで、Claudeがプロジェクトの構造を素早く確認でき、Claudeが編集すべきファイルを特定するのに役立ちます。
 
+<a href="https://glama.ai/mcp/servers/1igr60piqh"><img width="380" height="200" src="https://glama.ai/mcp/servers/1igr60piqh/badge" alt="Source Tree Server MCP server" /></a>
+
 ## 機能
 
 - 指定されたディレクトリ配下のファイルツリーをJSON形式で取得
