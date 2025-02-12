@@ -71,7 +71,7 @@ def should_ignore(
 
 
 def build_tree(
-    path: str, base_path: str, gitignore: Optional[pathspec.PathSpec] = None
+    path: str, base_path: str, gitignore: Optional[pathspec.PathSpec] = None, is_root: bool = True
 ) -> Dict[str, Any]:
     """
     ディレクトリのツリー構造を構築する
@@ -80,15 +80,16 @@ def build_tree(
         path: 走査するディレクトリのパス
         base_path: .gitignoreが存在するベースディレクトリのパス
         gitignore: .gitignoreのPathSpecオブジェクト
+        is_root: ルートディレクトリかどうか
 
     Returns:
         ディレクトリツリーの辞書
     """
-    name = os.path.basename(path)
-
     # 無視すべきパスかチェック
     if should_ignore(path, base_path, gitignore):
         return None
+
+    name = os.path.abspath(path) if is_root else os.path.basename(path)
 
     if os.path.isfile(path):
         return {"name": name, "type": "file"}
@@ -99,7 +100,7 @@ def build_tree(
         items = os.listdir(path)
         for item in sorted(items):
             item_path = os.path.join(path, item)
-            child = build_tree(item_path, base_path, gitignore)
+            child = build_tree(item_path, base_path, gitignore, is_root=False)
             if child:
                 result["children"].append(child)
     except PermissionError:
