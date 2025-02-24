@@ -7,26 +7,26 @@ from typing import Any, Dict, Optional
 import pathspec
 from mcp.server.fastmcp import FastMCP
 
-# FastMCPサーバーの初期化
+# Initialize FastMCP server
 mcp = FastMCP("src-tree")
 
 
 def read_gitignore(base_path: str) -> Optional[pathspec.PathSpec]:
     """
-    .gitignoreファイルを読み込み、PathSpecオブジェクトを返す
+    Read .gitignore file and return a PathSpec object
 
     Args:
-        base_path: .gitignoreファイルのあるベースディレクトリのパス
+        base_path: Base directory path containing .gitignore
 
     Returns:
-        PathSpecオブジェクト、.gitignoreが存在しない場合はNone
+        PathSpec object, or None if .gitignore doesn't exist
     """
     gitignore_path = os.path.join(base_path, ".gitignore")
     if not os.path.exists(gitignore_path):
         return None
 
     with open(gitignore_path, "r") as f:
-        # 空行とコメント行を除去
+        # Remove empty lines and comments
         lines = [
             line.strip()
             for line in f.readlines()
@@ -42,27 +42,27 @@ def should_ignore(
     path: str, base_path: str, gitignore: Optional[pathspec.PathSpec] = None
 ) -> bool:
     """
-    指定されたパスを無視すべきかどうかを判定する
+    Determine if the specified path should be ignored
 
     Args:
-        path: チェックするパス
-        base_path: .gitignoreが存在するベースディレクトリのパス
-        gitignore: .gitignoreのPathSpecオブジェクト
+        path: Path to check
+        base_path: Base directory path containing .gitignore
+        gitignore: PathSpec object from .gitignore
 
     Returns:
-        無視すべき場合はTrue
+        True if path should be ignored
     """
-    # .で始まるディレクトリは無視
+    # Ignore directories starting with .
     if os.path.isdir(path) and os.path.basename(path).startswith("."):
         return True
 
-    # .gitignoreの条件に一致するかチェック
+    # Check if path matches .gitignore rules
     if gitignore:
         relative_path = os.path.relpath(path, base_path)
-        # ディレクトリの場合は末尾にスラッシュを追加
+        # Add trailing slash for directories
         if os.path.isdir(path):
             relative_path = relative_path + os.sep
-        # パスの正規化（スラッシュを統一）
+        # Normalize path (unify slashes)
         relative_path = relative_path.replace(os.sep, "/")
         if gitignore.match_file(relative_path):
             return True
@@ -71,21 +71,24 @@ def should_ignore(
 
 
 def build_tree(
-    path: str, base_path: str, gitignore: Optional[pathspec.PathSpec] = None, is_root: bool = True
+    path: str,
+    base_path: str,
+    gitignore: Optional[pathspec.PathSpec] = None,
+    is_root: bool = True,
 ) -> Dict[str, Any]:
     """
-    ディレクトリのツリー構造を構築する
+    Build directory tree structure
 
     Args:
-        path: 走査するディレクトリのパス
-        base_path: .gitignoreが存在するベースディレクトリのパス
-        gitignore: .gitignoreのPathSpecオブジェクト
-        is_root: ルートディレクトリかどうか
+        path: Directory path to traverse
+        base_path: Base directory path containing .gitignore
+        gitignore: PathSpec object from .gitignore
+        is_root: Whether this is the root directory
 
     Returns:
-        ディレクトリツリーの辞書
+        Dictionary representing directory tree
     """
-    # 無視すべきパスかチェック
+    # Check if path should be ignored
     if should_ignore(path, base_path, gitignore):
         return None
 
@@ -112,10 +115,10 @@ def build_tree(
 @mcp.prompt()
 async def src_tree(directory: str) -> str:
     """
-    ファイルツリーを取得する
+    Get file tree as JSON string
 
     Returns:
-        ファイルツリーのJSON文字列
+        JSON string representing the file tree
     """
     if not os.path.exists(directory):
         return json.dumps({"error": "directory not found"}, indent=2)
@@ -129,13 +132,8 @@ async def src_tree(directory: str) -> str:
 @mcp.tool()
 async def get_src_tree(directory: str) -> str:
     """
-    指定されたディレクトリ配下のすべてのファイルツリーを返す
-
-    Args:
-        directory: 走査対象のディレクトリパス
-
-    Returns:
-        JSON形式のファイルツリー文字列
+    Generate a file tree for the specified directory, filtering files based on .gitignore.
+    Traverses the filesystem and generates a JSON-formatted tree structure that preserves hierarchy.
     """
     if not os.path.exists(directory):
         return json.dumps({"error": "directory not found"}, indent=2)
@@ -152,6 +150,6 @@ if __name__ == "__main__":
     if not args:
         mcp.run(transport="stdio")
     elif args[0] == "test" and len(args) == 2:
-        # 非同期関数を実行するためのイベントループを作成
+        # Create event loop to run async function
         result = asyncio.run(get_src_tree(args[1]))
         print(result)
